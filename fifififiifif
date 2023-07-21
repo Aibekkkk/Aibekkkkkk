@@ -1,0 +1,82 @@
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score
+import pandas as pd  
+import matplotlib.pyplot as plt
+df = pd.read_csv('train.csv')
+df.info()
+df.drop(['id','bdate','has_photo','has_mobile','followers_count','relation', 'graduation','life_main','people_main','city','last_seen','occupation_name', 'career_start', 'career_end', 'langs'], axis=1, inplace=True)
+
+print(df['education_form'].value_counts())
+
+df['education_form'].fillna('Full-time', inplace = True)
+df[list(pd.get_dummies(df['education_form']).columns)] = pd.get_dummies(df['education_form'])
+df.drop(['education_form'], axis = 1, inplace = True)
+
+def sex_apply(sex):
+    if sex ==2:
+        return 0
+    return 1
+
+df['sex'] = df['sex'].apply(sex_apply)
+
+
+
+def edu_status_apply(edu_status):
+    if edu_status == 'Undergraduate applicant':
+        return 0
+    elif edu_status == "Student (Specialist)" or edu_status == "Student (Master's)"  or edu_status == "Student (Bachelor's)":
+        return 1
+    elif edu_status == "Alumnus (Specialist)" or edu_status == "Alumnus (Bachelor's)" or edu_status == "Alumnus (Master's)":
+        return 2
+    elif edu_status == "Candidate of Sciences":
+        return 3
+    else:
+        return 4
+
+
+df['education_status'] = df['education_status'].apply(edu_status_apply)
+
+
+print(df['occupation_type'].value_counts())
+
+def ocup_type_apply(ocu_type):
+    if ocu_type =='university':
+        return 0
+    return 1
+
+df['occupation_type'] = df['occupation_type'].apply(ocup_type_apply)
+
+
+#df['sex'].value_counts().plot(kind = 'pie')
+
+#df['occupation_type'].value_counts().plot(kind = "hist", bins = 10)
+
+#df['occupation_type'].value_counts().plot(kind = 'bar', figsize = (20,10), grid = True)
+
+#df['education_status'].value_counts().plot(kind = 'bar', figsize = (20,10), grid = True)
+
+#df.plot(x = 'result', y = 'Part-time', kind = 'scatter', grid = True, figsize = (20, 10))
+
+
+df['sex'] = df['sex'].apply(sex_apply)
+pd.get_dummies(df['education_status'])
+df[list(pd.get_dummies(df['education_status']).columns)] = pd.get_dummies(df['education_status'])
+df.drop('education_status', axis=1, inplace=True)
+x = df.drop('result', axis=1)
+y = df['result']
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size= 3)
+sc = StandardScaler()
+x_train = sc.fit_transform(x_train)
+x_test = sc.transform(x_test)
+classifier = KNeighborsClassifier(n_neighbors=3)
+classifier.fit(x_train, y_train)
+y_pred = classifier.predict(x_test)
+percent = accuracy_score(y_test, y_pred) * 100
+print(percent)
+
+
+plt.show()
+
+
